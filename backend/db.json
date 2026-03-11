@@ -1,0 +1,40 @@
+{
+  "quotes": [
+    {
+      "id": "1",
+      "author": "Socrates",
+      "quote": "The only true wisdom is in knowing you know nothing"
+    },
+    {
+      "id": "2",
+      "author": "Einstein",
+      "quote": "Imagination is more important than knowledge"
+    },
+    {
+      "id": "3",
+      "author": "Sebi mucos",
+      "quote": "Sunt mucos si-mi pare bine!!"
+    },
+    {
+      "id": "4",
+      "author": "Sebi mucos",
+      "quote": "Sunt mucos si-mi pare bine!!"
+    },
+    {
+      "id": "5",
+      "author": "Sebi mucos",
+      "quote": "Sunt mucos si-mi pare bine!!"
+    },
+    {
+      "id": "6",
+      "author": "Sebi mucos",
+      "quote": "Sunt mucos si-mi pare bine!!"
+    },
+    {
+      "id": "7",
+      "author": "Sebi mucos",
+      "quote": "Sunt mucos si-mi pare bine!!"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}

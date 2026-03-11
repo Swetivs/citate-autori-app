@@ -1,0 +1,19 @@
+#Dependente
+node_modules/
+package-lock.json
+
+#Fisiere de sistem
+.DS_Store
+Thumbs.db
+
+#Fisiere de configurare environment (date sensibile)
+.env
+.env.local
+
+#Directoare de build
+dist/
+build/
+
+#Fisiere log
+*.log
+npm-debug.log*
