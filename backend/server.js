@@ -1,11 +1,22 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
 const path = require('path');
 const Joi = require('joi');
 
 const app = express();
 app.use(cors()); //Permite cererri cros-origin
 app.use(express.json()); //parsare json pentru request body
+
+// Directorul unde salvam imaginile descarcate.
+// path.join asigura compatibilitate cross-platform.
+const IMAGES_DIR = path.join(__dirname, "images");
+
+// Cream directorul /images daca nu exista deja
+if (!fs.existsSync(IMAGES_DIR)) {
+    fs.mkdirSync(IMAGES_DIR, { recursive: true });
+}
+
 app.use("/images", express.static(path.join(__dirname, "images"))); // Servire imagini statice
 
 const JSON_SERVER_URL = "http://localhost:3000/quotes";
@@ -20,6 +31,7 @@ const validateId = (req, res, next) => {
 const quoteSchema = Joi.object({
     author: Joi.string().min(2).required(),
     quote: Joi.string().min(5).required(),
+    imageUrl: Joi.string().allow("").optional(),
 });
 
 // GET /api/quotes?search=termen
@@ -47,6 +59,79 @@ app.get("/api/quotes", async (req, res) => {
     } catch (error) {
         console.error("Eroare la preluarea citatelor:", error.message);
         res.status(500).json({ error: "Nu s-au putut prelua citatele." });
+    }
+});
+
+// POST /api/quotes/fetch-image
+// Primeste { author } din body, cauta pe Wikipedia,
+// descarca imaginea si o salveaza in /images.
+// Returneaza URL-ul local al imaginii.
+app.post("/api/quotes/fetch-image", async (req, res) => {
+    const { author } = req.body;
+
+    if (!author || !author.trim()) {
+        return res.status(400).json({ error: "Numele autorului este obligatoriu." });
+    }
+
+    try {
+        // "Albert Einstein" -> "Albert_Einstein"
+        const wikiName = author.trim().replace(/\s+/g, "_");
+        const wikiUrl =
+            `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiName)}`;
+
+        // Cerere catre Wikipedia REST API
+        const wikiResponse = await fetch(wikiUrl, {
+            headers: {
+                "User-Agent": "PrintingQuotesApp/1.0"
+            }
+        });
+
+        if (!wikiResponse.ok) {
+            return res.status(404).json({
+                error: `Autorul "${author}" nu a fost gasit pe Wikipedia.`
+            });
+        }
+
+        const wikiData = await wikiResponse.json();
+
+        // Verificam daca pagina Wikipedia are imagine thumbnail
+        if (!wikiData.thumbnail?.source) {
+            return res.status(404).json({
+                error: `Nu exista imagine disponibila pentru "${author}" pe Wikipedia.`
+            });
+        }
+
+        const imageUrl = wikiData.thumbnail.source;
+
+        // Determinam extensia fisierului din URL (.jpg, .png etc.)
+        const imageExt = imageUrl.split(".").pop().split("?")[0].toLowerCase() || "jpg";
+
+        // Numele fisierului local: "albert_einstein.jpg"
+        const fileName = `${author.trim().toLowerCase().replace(/\s+/g, "_")}.${imageExt}`;
+        const filePath = path.join(IMAGES_DIR, fileName);
+
+        // Daca imaginea a fost descarcata anterior, o returnam direct
+        if (fs.existsSync(filePath)) {
+            return res.status(200).json({ imageUrl: `/images/${fileName}` });
+        }
+
+        // Descarcam imaginea de la Wikipedia
+        const imgResponse = await fetch(imageUrl);
+        if (!imgResponse.ok) {
+            return res.status(500).json({ error: "Nu s-a putut descarca imaginea." });
+        }
+
+        // Convertim raspunsul intr-un Buffer (date binare)
+        const buffer = Buffer.from(await imgResponse.arrayBuffer());
+
+        // Scriem fisierul pe disc in directorul /images
+        fs.writeFileSync(filePath, buffer);
+
+        // Returnam URL-ul local - Express serveste /images/* ca static
+        res.status(200).json({ imageUrl: `/images/${fileName}` });
+    } catch (error) {
+        console.error("Eroare la fetch-image:", error.message);
+        res.status(500).json({ error: "Eroare interna la preluarea imaginii." });
     }
 });
 

@@ -6,6 +6,7 @@ import {
   addQuote,
   updateQuote,
   deleteQuote,
+  fetchAuthorImage,
 } from "../api/quoteApi";
 import { useFormValidation } from "../hooks/useFormValidation";
 
@@ -44,6 +45,11 @@ export default function ManagePage() {
   // Mesaj de feedback dupa operatii (succes sau eroare)
   const [feedback, setFeedback] = useState({ message: "", type: "" });
 
+  // Stari pentru gestionarea imaginii in formular
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState("");
+
   const [loading, setLoading] = useState(true);
 
   // HOOK-ul de validare - destructuram errors, validate, clearErrors
@@ -73,6 +79,27 @@ export default function ManagePage() {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
+  // Cauta imaginea autorului pe baza numelui introdus
+  async function handleFetchImage() {
+    if (!formData.author.trim()) {
+      setImageError("Introduceti mai intai numele autorului.");
+      return;
+    }
+
+    setImageLoading(true);
+    setImageError("");
+
+    try {
+      const result = await fetchAuthorImage(formData.author);
+      setImageUrl(result.imageUrl);
+    } catch (err) {
+      setImageError(err.message);
+      setImageUrl("");
+    } finally {
+      setImageLoading(false);
+    }
+  }
+
   // Trimitem formularului - comportament diferit in functie de mod
   async function handleSubmit(e) {
     // Prevenim comportamentul implicit al formularului (reload pagina)
@@ -84,14 +111,17 @@ export default function ManagePage() {
       return;
     }
 
+    // Includem imageUrl in datele trimise la backend
+    const payload = { ...formData, imageUrl };
+
     try {
       if (editingQuote) {
         // MOD EDITARE: trimitem PUT cu ID-ul citatului editat
-        await updateQuote(editingQuote.id, formData);
+        await updateQuote(editingQuote.id, payload);
         showFeedback("Citatul a fost actualizat cu succes.", "success");
       } else {
         // MOD ADAUGARE: trimitem POST fara ID
-        await addQuote(formData);
+        await addQuote(payload);
         showFeedback("Citatul a fost adaugat cu succes.", "success");
       }
 
@@ -109,6 +139,8 @@ export default function ManagePage() {
   function handleEdit(quote) {
     setEditingQuote(quote);
     setFormData({ author: quote.author, quote: quote.quote });
+    setImageUrl(quote.imageUrl || "");
+    setImageError("");
     clearErrors(); // Stergem erorile anterioare la intrarea in editare
     // Derulam pagina sus - formularul se afla in header
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -134,6 +166,8 @@ export default function ManagePage() {
   function resetForm() {
     setEditingQuote(null);
     setFormData({ author: "", quote: "" });
+    setImageUrl("");
+    setImageError("");
     clearErrors(); // Curatam erorile la resetarea formularului
   }
 
@@ -221,6 +255,63 @@ export default function ManagePage() {
                   {errors.author}
                 </p>
               )}
+
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Imagine autor
+                </label>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleFetchImage}
+                    disabled={imageLoading || !formData.author.trim()}
+                    className="flex-1 py-2 px-4 text-sm font-medium rounded-lg border border-indigo-300 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {imageLoading
+                      ? "Se cauta..."
+                      : "Cauta imagine pe Wikipedia"}
+                  </button>
+
+                  {imageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageUrl("");
+                        setImageError("");
+                      }}
+                      className="px-3 py-2 text-sm text-red-500 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      x
+                    </button>
+                  )}
+                </div>
+
+                {imageError && (
+                  <p className="mt-1 text-xs text-red-500">! {imageError}</p>
+                )}
+
+                {imageUrl && !imageError && (
+                  <div className="mt-3 flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <img
+                      src={`http://localhost:5000${imageUrl}`}
+                      alt={formData.author}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-indigo-200"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                    <div>
+                      <p className="text-xs font-medium text-gray-700">
+                        {formData.author}
+                      </p>
+                      <p className="text-xs text-gray-400 truncate max-w-xs">
+                        {imageUrl}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div>

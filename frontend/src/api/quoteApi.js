@@ -21,11 +21,30 @@ export async function addQuote(quoteData) {
 
     if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.errors?.join(", ") || "Nu s-a putut adauga citatul");
+        throw new Error(err.errors?.join(", ") || err.error || "Nu s-a putut adauga citatul");
     }
     return response.json();
 }
 
+// POST /api/quotes/fetch-image
+// Trimite numele autorului la Express, care il cauta pe Wikipedia.
+// Returneaza { imageUrl: "/images/albert_einstein.jpg" }
+export async function fetchAuthorImage(author) {
+    const response = await fetch(`${BASE_URL.replace("/quotes", "")}/quotes/fetch-image`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ author }),
+    });
+
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Nu s-a putut prelua imaginea.");
+    }
+
+    return response.json(); // { imageUrl: "/images/..." }
+}
+
+// PUT /api/quotes/:id - versiunea actualizata care accepta si imageUrl
 export async function updateQuote(id, quoteData) {
     const response = await fetch(`${BASE_URL}/${id}`, {
         method: "PUT",
@@ -35,7 +54,7 @@ export async function updateQuote(id, quoteData) {
 
     if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.errors?.join(", ") || "Nu s-a putut actualiza citatul.");
+        throw new Error(err.errors?.join(", ") || err.error || "Nu s-a putut actualiza citatul.");
     }
     return response.json();
 }

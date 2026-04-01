@@ -3,42 +3,50 @@
     {
       "id": "1",
       "author": "Socrates",
-      "quote": "The only true wisdom is in knowing you know nothing"
+      "quote": "The only true wisdom is in knowing you know nothing",
+      "imageUrl": ""
     },
     {
       "id": "2",
       "author": "Einstein",
-      "quote": "Imagination is more important than knowledge"
+      "quote": "Imagination is more important than knowledge",
+      "imageUrl": ""
     },
     {
       "id": "3",
       "author": "Sebi mucos",
-      "quote": "Sunt mucos si-mi pare bine!!"
+      "quote": "Sunt mucos si-mi pare bine!!",
+      "imageUrl": ""
     },
     {
       "id": "4",
       "author": "Sebi mucos",
-      "quote": "Sunt mucos si-mi pare bine!!"
+      "quote": "Sunt mucos si-mi pare bine!!",
+      "imageUrl": ""
     },
     {
       "id": "5",
       "author": "Sebi mucos",
-      "quote": "Sunt mucos si-mi pare bine!!"
+      "quote": "Sunt mucos si-mi pare bine!!",
+      "imageUrl": ""
     },
     {
       "id": "6",
       "author": "Sebi mucos",
-      "quote": "Sunt mucos si-mi pare bine!!"
+      "quote": "Sunt mucos si-mi pare bine!!",
+      "imageUrl": ""
     },
     {
       "id": "7",
       "author": "Sebi mucos",
-      "quote": "Sunt mucos si-mi pare bine!!"
+      "quote": "Sunt mucos si-mi pare bine!!",
+      "imageUrl": ""
     },
     {
       "id": "8",
       "author": "Sorin Sapojnic",
-      "quote": "Banca BT este cea mai buna (abureala!)"
+      "quote": "Banca BT este cea mai buna (abureala!)",
+      "imageUrl": ""
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
