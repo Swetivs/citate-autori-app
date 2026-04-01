@@ -1,7 +1,9 @@
 export default function QuoteCard({ quote, onEdit, onDelete }) {
   // URL-ul imaginii, prefixat cu adresa serverului Express.
   // Daca nu exista imagine, afisam un placeholder cu initialele autorului.
-  const imgSrc = quote.imageUrl ? `http://localhost:5000${quote.imageUrl}` : null;
+  const imgSrc = quote.imageUrl
+    ? `http://localhost:5000${quote.imageUrl}`
+    : null;
 
   // Extragem initialele pentru placeholder (ex. "Albert Einstein" -> "AE")
   const initials = quote.author
@@ -38,8 +40,12 @@ export default function QuoteCard({ quote, onEdit, onDelete }) {
       </div>
 
       <div className="flex-1">
-        <span className="text-4xl text-indigo-300 leading-none select-none">"</span>
-        <p className="text-gray-600 text-sm italic leading-relaxed mt-1">{quote.quote}</p>
+        <span className="text-4xl text-indigo-300 leading-none select-none">
+          "
+        </span>
+        <p className="text-gray-600 text-sm italic leading-relaxed mt-1">
+          {quote.quote}
+        </p>
       </div>
 
       {(onEdit || onDelete) && (
