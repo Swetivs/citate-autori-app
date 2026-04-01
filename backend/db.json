@@ -34,6 +34,11 @@
       "id": "7",
       "author": "Sebi mucos",
       "quote": "Sunt mucos si-mi pare bine!!"
+    },
+    {
+      "id": "8",
+      "author": "Sorin Sapojnic",
+      "quote": "Banca BT este cea mai buna (abureala!)"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

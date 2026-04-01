@@ -11,7 +11,7 @@ app.use("/images", express.static(path.join(__dirname, "images"))); // Servire i
 const JSON_SERVER_URL = "http://localhost:3000/quotes";
 
 const validateId = (req, res, next) => {
-    if (isNaN(req.params.id)) {
+    if (!req.params.id || isNaN(req.params.id)) {
         return res.status(400).json({ error: "Invalid ID format" })
     }
     next();
@@ -50,7 +50,7 @@ app.get("/api/quotes", async (req, res) => {
     }
 });
 
-app.post("/api/quotes", validateId, async (req, res) => {
+app.post("/api/quotes", async (req, res) => {
 
     const { error } = quoteSchema.validate(req.body);
     if (error) {
@@ -91,16 +91,16 @@ app.put("/api/quotes/:id", validateId, async (req, res) => {
         const quoteId = req.params.id;
         const updateQuote = { id: quoteId, ...req.body };
 
-        const postResponse = await fetch(JSON_SERVER_URL, {
+        const putResponse = await fetch(`${JSON_SERVER_URL}/${quoteId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updateQuote),
         });
 
-        const data = await response.json();
+        const data = await putResponse.json();
 
         const recorderData = { id: data.id, author: data.author, quote: data.quote };
-        res.status(response.status).json(recorderData);
+        res.status(putResponse.status).json(recorderData);
     } catch (error) {
         console.error("Error updating quote:", error);
         res.status(500).json({ error: "Failed to update quote" });
