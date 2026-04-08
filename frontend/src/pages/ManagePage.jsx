@@ -7,6 +7,7 @@ import {
   updateQuote,
   deleteQuote,
   fetchAuthorImage,
+  generateQuote,
 } from "../api/quoteApi";
 import { useFormValidation } from "../hooks/useFormValidation";
 
@@ -50,6 +51,10 @@ export default function ManagePage() {
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState("");
 
+  // Stari pentru generarea automata a citatului cu AI
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiGenerated, setAiGenerated] = useState(false);
+
   const [loading, setLoading] = useState(true);
 
   // HOOK-ul de validare - destructuram errors, validate, clearErrors
@@ -72,11 +77,44 @@ export default function ManagePage() {
     fetchQuotes();
   }, [fetchQuotes]);
 
+  // Debounce pe campul autor: dupa 3 secunde, generam automat citatul.
+  // Nu suprascriem un citat existent si nu rulam in modul editare.
+  useEffect(() => {
+    if (
+      formData.author.trim().length < 3 ||
+      editingQuote ||
+      formData.quote.trim().length > 0
+    ) {
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setAiLoading(true);
+
+      try {
+        const result = await generateQuote(formData.author);
+
+        setFormData((prev) => ({ ...prev, quote: result.quote }));
+        setAiGenerated(true);
+      } catch (err) {
+        console.warn("Generare AI esuata:", err.message);
+      } finally {
+        setAiLoading(false);
+      }
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [formData.author, formData.quote, editingQuote]);
+
   // Handler generic pentru toate campurile formularului.
   // [e.target.name] foloseste proprietatea determinata pentru a actualiza
   // campul corespunzator (author sau quote) fara un handler per camp.
   function handleChange(e) {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+    if (e.target.name === "quote") {
+      setAiGenerated(false);
+    }
   }
 
   // Cauta imaginea autorului pe baza numelui introdus
@@ -141,6 +179,7 @@ export default function ManagePage() {
     setFormData({ author: quote.author, quote: quote.quote });
     setImageUrl(quote.imageUrl || "");
     setImageError("");
+    setAiGenerated(false);
     clearErrors(); // Stergem erorile anterioare la intrarea in editare
     // Derulam pagina sus - formularul se afla in header
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -168,6 +207,7 @@ export default function ManagePage() {
     setFormData({ author: "", quote: "" });
     setImageUrl("");
     setImageError("");
+    setAiGenerated(false);
     clearErrors(); // Curatam erorile la resetarea formularului
   }
 
@@ -315,27 +355,53 @@ export default function ManagePage() {
             </div>
 
             <div>
-              <label
-                htmlFor="quote"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                Citat
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label
+                  htmlFor="quote"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Citat
+                </label>
+
+                {aiLoading && (
+                  <p className="text-xs text-indigo-500 flex items-center gap-1 animate-pulse">
+                    <span>●</span>
+                    AI genereaza citatul...
+                  </p>
+                )}
+
+                {aiGenerated && !aiLoading && (
+                  <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full border border-indigo-200">
+                    Generat de AI
+                  </span>
+                )}
+              </div>
               <textarea
                 id="quote"
                 name="quote"
                 value={formData.quote}
                 onChange={handleChange}
-                placeholder="Introduceti citatul..."
+                placeholder={
+                  aiLoading
+                    ? "Se genereaza citatul..."
+                    : "Introduceti citatul sau asteptati generarea automata..."
+                }
                 rows={4}
-                className={`${inputClass("quote")} resize-none`}
+                className={`${inputClass("quote")} resize-none transition-all ${
+                  aiLoading ? "bg-indigo-50 border-indigo-200" : ""
+                }`}
               />
 
-              <div className="flex justify-between mt-1">
+              <div className="flex justify-between mt-1 items-start gap-3">
                 {errors.quote ? (
                   <p className="text-xs text-red-500 flex items-center gap-1">
                     <span>!</span>
                     {errors.quote}
+                  </p>
+                ) : aiGenerated && !aiLoading ? (
+                  <p className="text-xs text-gray-400 italic">
+                    Citat sugerat de AI - verificati autenticitatea inainte de
+                    salvare.
                   </p>
                 ) : (
                   <span />
@@ -351,6 +417,14 @@ export default function ManagePage() {
                   {formData.quote.length}/500
                 </span>
               </div>
+
+              {(aiLoading || aiGenerated) && (
+                <p className="mt-2 text-xs text-indigo-500">
+                  {aiLoading
+                    ? "Se genereaza automat citatul cu AI..."
+                    : "Citat generat automat de AI."}
+                </p>
+              )}
             </div>
 
             <div className="flex gap-3 pt-2">

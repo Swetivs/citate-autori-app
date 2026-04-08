@@ -44,6 +44,23 @@ export async function fetchAuthorImage(author) {
     return response.json(); // { imageUrl: "/images/..." }
 }
 
+// POST /api/quotes/generate-quote
+// Trimite numele autorului la backend si returneaza citatul generat.
+export async function generateQuote(author) {
+    const response = await fetch(`${BASE_URL.replace("/quotes", "")}/quotes/generate-quote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ author }),
+    });
+
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Nu s-a putut genera citatul.");
+    }
+
+    return response.json(); // { quote: "..." }
+}
+
 // PUT /api/quotes/:id - versiunea actualizata care accepta si imageUrl
 export async function updateQuote(id, quoteData) {
     const response = await fetch(`${BASE_URL}/${id}`, {

@@ -47,6 +47,12 @@
       "author": "Sorin Sapojnic",
       "quote": "Banca BT este cea mai buna (abureala!)",
       "imageUrl": ""
+    },
+    {
+      "id": "9",
+      "author": "Socrates",
+      "quote": "Cunoașterea de sine este începutul tuturor înțelepciunilor, iar adevărata fericire vine din întrebările pe care ni le punem.",
+      "imageUrl": "/images/socrates.jpg"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

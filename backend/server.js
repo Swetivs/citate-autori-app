@@ -4,6 +4,15 @@ const fs = require('fs');
 const path = require('path');
 const Joi = require('joi');
 
+require("dotenv").config();
+
+const OpenAI = require("openai");
+
+const openai = new OpenAI({
+    baseURL: "https://models.inference.ai.azure.com",
+    apiKey: process.env.GITHUB_TOKEN,
+});
+
 const app = express();
 app.use(cors()); //Permite cererri cros-origin
 app.use(express.json()); //parsare json pentru request body
@@ -135,6 +144,43 @@ app.post("/api/quotes/fetch-image", async (req, res) => {
     }
 });
 
+app.post("/api/quotes/generate-quote", async (req, res) => {
+    const { author } = req.body;
+
+    if (!author || !author.trim()) {
+        return res.status(400).json({ error: "Numele autorului este obligatoriu!" });
+    }
+
+    try {
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [{
+                role: "system",
+                content: 'Esti un cunoscator in literatura si filosfie. Generezi citate scurte, inspirationale si autentice. Raspunzi DOAR cu citatul, fara ghilimele, fara numele autorului, fara explicatii suplimentare. Maxim 2 propozitii!'
+            },
+            {
+                role: "user",
+                content: `Scrie un citat autentic specific lui ${author.trim()}. Daca autorul are citate celebre cunoscute, foloseste unul dintre ele. Daca nu genereaza unul in stilul si filosofia sa.`
+            },
+            ],
+            max_tokens: 150,
+            temperature: 0.7,
+        });
+
+        const generateQuote = completion.choices[0].message.content.trim();
+
+        res.status(200).json({ quote: generateQuote });
+    } catch (error) {
+        console.error("Eroare OpenAI:", error.message);
+
+        if (error.status === 401) {
+            return res.status(500).json({ error: "Cheie API OpenAI invalida!" });
+        }
+
+        return res.status(500).json({ error: "Nu s-a putut genera citatul!" });
+    }
+});
+
 app.post("/api/quotes", async (req, res) => {
 
     const { error } = quoteSchema.validate(req.body);
@@ -191,60 +237,6 @@ app.put("/api/quotes/:id", validateId, async (req, res) => {
         res.status(500).json({ error: "Failed to update quote" });
     }
 })
-
-
-// let quotes = [{id:1, author: "Socrates", quote:"The only true wisdom is in knowing you know nothing."},
-//     {id:2, author:"Albert Einstein", quote:"Life is like riding a bicycle. To keep your balance you must keep moving."}];
-
-// app.get("/", (req, res) =>{
-//     res.json({
-//         message: "Printing....",
-//         endpoints: {
-//             quotes: "api/quotes",
-//             health: "api/health",
-//         }
-//     });
-// });
-
-// app.get("/api/quotes", (req, res) =>{
-//     res.status(200).json(quotes);
-// });
-
-// app.post("/api/quotes", (req, res)=>{
-//     const {author, quote} = req.body;
-//     const newQuote = {
-//         id: quotes.length +1, author, quote
-//     };
-
-//     quotes.push(newQuote);
-//     res.status(201).json(newQuote);
-// });
-
-// app.put("/api/quotes/:id", (req,res)=>{
-//     const id = parseInt(req.params.id);
-//     const{author, quote} = req.body;
-
-//     const index = quotes.findIndex(q => q.id === id);
-
-//     if(index === -1){
-//         return res.status(404).json({message: "Citatul nu a fost gasit"});
-//     }
-
-//     quotes[index] = {id,author,quote};
-//     res.status(200).json(quotes);
-// });
-
-// app.delete("/api/quotes/:id", (req, res) => { 
-//     const id = parseInt(req.params.id);
-//     const index = quotes.findIndex(q => q.id === id);
-
-//     if(index === -1){
-//         return res.status(404).json({message: "Citatul nu a fost gasit"});
-//     }
-
-//     quotes.splice(index, 1);
-//     res.status(204).json({message: "Citatul a fost sters cu succes."});
-// });
 
 
 //Pornim serversul pe portul 5000
